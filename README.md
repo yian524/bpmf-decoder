@@ -30,7 +30,7 @@ rup wu0 wu0 fu4 5p cl3!   ←  選取
 ## 安裝（4 步驟，約 3 分鐘）
 
 ```powershell
-# 1. clone repo（請替換 yian524 為實際使用者，或用本 fork）
+# 1. clone repo
 git clone https://github.com/yian524/bopo-fix.git
 cd bopo-fix
 
