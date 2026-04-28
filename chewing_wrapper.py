@@ -44,8 +44,21 @@ _S2T = OpenCC("s2twp")
 # pickle is ~30ms. The cache key invalidates on changes to:
 #   - this file's source (overrides, freq logic)
 #   - pypinyin version (dictionary contents)
-_CACHE_DIR = Path(os.environ.get("BOPO_FIX_CACHE_DIR",
-                                  Path.home() / ".cache" / "bopo-fix"))
+# Cache lives under ~/.cache/zhuyin-decoder/ (matching the repo name).
+# Falls back to the legacy ~/.cache/bopo-fix/ path if it exists, so users
+# upgrading from the pre-rename version don't lose their downloaded CEDICT.
+def _resolve_cache_dir() -> Path:
+    if "BOPO_FIX_CACHE_DIR" in os.environ:
+        return Path(os.environ["BOPO_FIX_CACHE_DIR"])
+    primary = Path.home() / ".cache" / "zhuyin-decoder"
+    legacy = Path.home() / ".cache" / "bopo-fix"
+    # Use legacy dir if it exists (preserves cached cedict + pickle)
+    if legacy.exists() and not primary.exists():
+        return legacy
+    return primary
+
+
+_CACHE_DIR = _resolve_cache_dir()
 _CACHE_FILE = _CACHE_DIR / "reverse_dicts.pkl"
 _CEDICT_FILE = _CACHE_DIR / "cedict_ts.u8"  # downloaded once, see install
 _CACHE_VERSION = 6  # bump when build logic changes incompatibly

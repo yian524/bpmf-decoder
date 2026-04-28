@@ -1,165 +1,189 @@
-# bopo-fix · 注音輸入法忘記切換 一鍵還原
+# 英文 → 繁體中文 輸入法解碼器 (ㄅㄆㄇ)
 
-打字時忘記切換輸入法 → 整段中文變英文亂碼？選取那段亂碼，按熱鍵，原地替換成繁體中文。
+> **30 秒看懂**：你打字時忘了切回注音，整段中文變成 `rup wu0 wu0 fu4 5p cl3` 這種英文亂碼？選取那段，按 **Win + Shift + Z**，原地變回「**今天天氣真好**」。
 
 ```
-rup wu0 wu0 fu4 5p cl3!   ←  選取
+rup wu0 wu0 fu4 5p cl3!   ← 你選取的英文亂碼
        ↓ Win+Shift+Z
-今天天氣真好！               ←  替換完成
+今天天氣真好！               ← 原地替換完成
 ```
 
-**沒有現成 OSS 工具能做到這件事**：網路上的線上解碼器 (toolskk / vexed.me) 只能複製貼上，AHK 的 KBLAutoSwitch 只切輸入法不還原內容，libchewing 沒 Windows binary。所以做了這個。
+線上的「[注音解碼器](https://www.toolskk.com/zhuyin-decode)」（toolskk / vexed.me / IGLOW）只能複製貼上，每次都要開瀏覽器。這是**桌面熱鍵版本**，跨應用程式（Word / VS Code / LINE / Outlook / Discord ...）通用，89-92% 準確度。
 
-## 特性
+---
 
-- **大千 (Microsoft Bopomofo) 鍵盤配置**，鍵碼對照來自 libchewing 上游 source
-- **170k+ 詞語料庫**（CC-CEDICT 122k + pypinyin 47k + 你自己語料挖出來的高頻詞）
-- **頻率排名挑同音字**（Top-200 中研院/教育部公開頻率表加權，避免冷僻字）
-- **OpenCC s2twp 規範化**（消滅簡體混入）
-- **Windows 全域熱鍵** (Win+Shift+Z) via AutoHotkey v2
-- **離線執行**（CC-CEDICT 第一次跑時自動下載一次 4MB 字典，之後完全離線）
-- **89-92% 準確度** 在真實繁體中文文本上（500 樣本 fuzz 測試）
-- **~370ms 一次按鍵**（首次建字典 ~5s，pickle 快取後極快）
+## 安裝（4 步驟，3 分鐘）
 
-## 系統需求
+### 系統需求
 
-- Windows 10 / 11
-- Python 3.10+（[python.org](https://www.python.org/downloads/) 下載）
-- AutoHotkey v2 (`winget install AutoHotkey.AutoHotkey`)
+- **Windows 10 / 11**
+- **Python 3.10 或更新**（[python.org 下載](https://www.python.org/downloads/)）
+- **AutoHotkey v2**：
+  - Win 11 或新 Win 10：`winget install AutoHotkey.AutoHotkey`
+  - 較舊版 Win 10：[autohotkey.com/v2/](https://www.autohotkey.com/v2/) 下載安裝程式
 
-## 安裝（4 步驟，約 3 分鐘）
+### 安裝步驟
+
+打開 PowerShell（不是 cmd 也不是 git-bash），照下面執行：
 
 ```powershell
-# 1. clone repo
-git clone https://github.com/yian524/bopo-fix.git
-cd bopo-fix
+# 1. 下載專案
+git clone https://github.com/yian524/zhuyin-decoder.git
+cd zhuyin-decoder
 
-# 2. 建虛擬環境並裝依賴
+# 2. 建立虛擬環境並安裝依賴
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 
-# 3. 試跑 CLI 確認轉換引擎能用
-#    （第一次跑時會自動從 mdbg.net 下載 CC-CEDICT 字典 4MB 到 ~/.cache/bopo-fix/）
+# 3. 試跑一次（第一次會自動下載 4MB 的 CC-CEDICT 字典到 ~/.cache/zhuyin-decoder/）
 .venv\Scripts\python bopo_fix.py "rup wu0 wu0 fu4 5p cl3!"
-# 預期輸出: 今天天氣真好！
+# 預期看到：今天天氣真好！
 
-# 4. 啟動熱鍵 daemon (AutoHotkey v2)
-#    雙擊 bopo-fix.ahk 即可，托盤會出現綠 H 圖示 + "bopo-fix loaded" 通知
+# 4. 啟動熱鍵服務（雙擊資料夾裡的 bopo-fix.ahk）
+#    成功時：Windows 工作列右下角出現綠色 H 圖示 + "bopo-fix loaded" 通知
 ```
 
-### 開機自動啟動（建議）
+### 開機自動啟動（一次設定，永久生效）
 
-按 `Win + R` → 輸入 `shell:startup` → Enter，把 `bopo-fix.ahk` 的捷徑放進那個資料夾。下次開機自動載入熱鍵。
+按 **Win + R** → 輸入 `shell:startup` → Enter，把 `bopo-fix.ahk` 的**捷徑**（不是檔案本身）拖進那個資料夾。下次開機就會自動載入。
 
-## 使用
+---
 
-| 用法 | 範例 |
-|---|---|
-| 熱鍵（最常用） | 選取亂碼 → `Win+Shift+Z` → 原地替換 |
-| CLI（測試 / 整合用） | `bopo-fix.cmd "rup wu0 wu0 fu4 5p cl3!"` |
-| Stdin pipe | `echo "rup" \| bopo-fix.cmd` |
-| 檔案 IO | `bopo-fix.cmd --input-file in.txt --output-file out.txt` |
+## 使用範例
 
-> CLI 入口是 `bopo-fix.cmd`（在 repo 根目錄），不需放進 PATH——AHK 腳本會用相對路徑找它。想在 cmd / PowerShell 直接打 `bopo-fix` 的話，可以把 repo 目錄加進 PATH，或把 `bopo-fix.cmd` 複製到 PATH 裡的某個目錄。
+按熱鍵的步驟：**選取那段亂碼 → 按 Win+Shift+Z → 自動替換**。
 
-## 使用情境
+| 你正在用的軟體 | 怎麼選取亂碼 | 結果 |
+|---|---|---|
+| LINE / Discord / Telegram | 滑鼠拖曳選取 | 替換後可以直接送出 |
+| Outlook / Gmail | 滑鼠拖曳選取（其他段不受影響）| 中段亂碼修好，前後段保持原狀 |
+| Word / Google Docs | 滑鼠拖曳，或用 `Shift + 方向鍵` 微調選取 | 直接替換 |
+| VS Code / Notepad++ | `Home` → `Shift + End` 選整行 | 註解 / commit message 救回來 |
+| 命令列（不需熱鍵）| 直接打 CLI：`bopo-fix.cmd "rup wu0..."` | 印出還原結果 |
 
-| 情境 | 操作 |
-|---|---|
-| LINE / Discord 聊天打到一半發現亂碼 | 選取那段 → Win+Shift+Z |
-| Outlook / Gmail 寫長 email 中段是亂碼 | 滑鼠拖選那段 → Win+Shift+Z（其他段不受影響）|
-| VS Code 寫 Python 註解 / git commit message | Ctrl+L 選整行 → Win+Shift+Z |
-| Word 寫論文 | 反白那段 → Win+Shift+Z |
+> ⚠️ 跨**遠端桌面 / 虛擬機**時，模擬 Ctrl+C/V 不一定可靠，建議改用 CLI 模式。
+
+---
 
 ## 為什麼準確度只有 ~90%？
 
-這個工具是**字典查表 + 頻率排名**，不是真正的語言模型。對「教授/碩士/論文/實驗/評估/特徵」這種常用詞 100% 準（因為直接整詞查表命中），但對同音字（是/事/視、和/合、新/心）就只能挑頻率最高的，沒上下文理解能力。
+這個工具是**字典查表 + 頻率排名**，不是有上下文理解能力的語言模型：
 
-剩下 10% 錯誤幾乎全是同音字消歧。要破 95% 需要真正的 LM（libchewing 自編、本地 LLM 或 Claude API），那是另一個工程。
+| 情境 | 準確度 |
+|---|---|
+| 完整詞彙命中（教授/碩士/研究/實驗/資料/分析）| ~100% |
+| 一般敘述句 | 89-92% |
+| 同音字無上下文（是/事、和/合、新/心） | 60-80%（看頻率猜）|
 
-## 客製化（讓引擎更懂你的領域）
+要破 95% 需要真正的 LM（local LLM 或 Claude API），那是另一個工程。
 
-### 加入你常用的詞（手動）
+---
 
-編輯 `thesis_phrase_overrides.py`，加上「Bopomofo → 詞」對應：
+## 客製化：教引擎你的常用詞
+
+如果你某個詞反覆轉錯，有兩種解法：
+
+### 方式 A：手動加詞（最簡單，1 分鐘）
+
+打開 repo 裡的 **`thesis_phrase_overrides.py`**（檔名雖然叫 thesis 但**任何詞都能加**，不限學術），加上「Bopomofo → 中文」對應：
 
 ```python
 THESIS_PHRASES = {
     ...
-    "ㄒㄧㄣㄒㄩㄝˋㄍㄨㄢˇ": "心血管",  # 醫學常用詞
-    "ㄐㄧˋㄒㄩˋ": "繼續",            # 你常打錯的詞
+    "ㄒㄧㄣㄒㄩㄝˋㄍㄨㄢˇ": "心血管",   # 醫學常用詞
+    "ㄐㄧˋㄒㄩˋ": "繼續",              # 你常打錯的
+    "ㄗˋㄉㄨㄥˋㄐㄧㄚˋㄕˇ": "自動駕駛",  # 你領域的詞
 }
 ```
 
-刪除 cache 後生效：
+刪掉快取讓新詞生效：
 
 ```powershell
-Remove-Item ~/.cache/bopo-fix/reverse_dicts.pkl
+Remove-Item ~/.cache/zhuyin-decoder/reverse_dicts.pkl
 ```
 
-### 從你自己的文章自動學詞（自動）
+### 方式 B：餵自己的文章自動學詞（適合大量文本）
 
-如果你有大量繁體中文文本（論文 / 部落格 / 筆記），可以讓工具掃描自動產生詞表：
+如果你有大量繁體中文 `.md` / `.txt` 檔（部落格 / 筆記 / 論文），讓工具自動分析常用詞：
 
 ```powershell
-# 從你的文件目錄挖出常用 2-4 字詞 (≥30 次)
-.venv\Scripts\python tests\build_phrase_overrides.py --corpus C:\Users\YOU\Documents\my-papers
-
-# 從你的文件目錄挖出單字偏好
-.venv\Scripts\python tests\build_char_overrides.py --corpus C:\Users\YOU\Documents\my-papers
+# 從你的文件目錄挖出常用 2-4 字詞 (出現 ≥ 30 次的)
+.venv\Scripts\python tests\build_phrase_overrides.py --corpus "C:\路徑\到\你的文件目錄"
 
 # 套用
-Remove-Item ~/.cache/bopo-fix/reverse_dicts.pkl
+Remove-Item ~/.cache/zhuyin-decoder/reverse_dicts.pkl
 ```
 
-兩個腳本會自動分析、改寫對應的 override 檔案。下次按熱鍵就生效。
+下次按熱鍵就會用你的個人化詞庫。
 
-## 架構
+---
+
+## 故障排除
+
+| 症狀 | 原因 | 解法 |
+|---|---|---|
+| 跳出 `bopo-fix.cmd not found` 對話框 | AHK 找不到 CLI 程式 | 確認 `bopo-fix.cmd` 跟 `bopo-fix.ahk` 在**同個資料夾** |
+| 第一次跑時看到 `CC-CEDICT download failed` | 沒網路 / 公司防火牆擋 | 工具仍可用（~88% 準確度）；之後有網路再跑一次 CLI 觸發下載 |
+| 按 Win+Shift+Z 完全沒反應 | AHK 沒在跑 | 雙擊 `bopo-fix.ahk`，確認工作列右下角有**綠色 H 圖示** |
+| 替換後游標跑掉 / 選取消失 | Ctrl+V 後焦點變化 | 正常現象，重新點一下輸入框即可 |
+| 跨遠端桌面 (RDP) / 虛擬機失效 | 程式化複製貼上在 RDP 不可靠 | 改用 CLI：`bopo-fix.cmd "..."` 然後手動貼 |
+
+---
+
+## 已知限制
+
+- 只支援**大千**鍵盤配置（Microsoft 注音 IME 的預設）
+- 同音字偶爾選錯（沒上下文模型解不掉）
+- 中英混排時可能誤判 `,` `.` 是標點還是注音 ㄝ/ㄡ — 用前後字 heuristic 處理，覆蓋 ~95% 場景
+- 變體字偏好可能跟你預期不同（裏/裡、着/著）
+
+---
+
+<details>
+<summary>📐 技術細節（給 contributor / 想 fork 的人）</summary>
+
+### 特性
+
+- **大千 (Microsoft Bopomofo) 鍵盤配置**，鍵碼對照來自 [libchewing](https://github.com/chewing/libchewing) 上游 source
+- **170k+ 詞語料庫**：CC-CEDICT 122k + pypinyin 47k + 自動學詞
+- **頻率排名挑同音字**：Top-200 中研院/教育部公開頻率表加權
+- **OpenCC s2twp 規範化**（消除簡體混入）
+- **離線執行**：CC-CEDICT 第一次自動下載 4MB 字典後完全離線
+- **~370ms 一次按鍵**（人類感知為即時，pickle 快取後）
+
+### 架構
 
 ```
 [使用者選取亂碼] → [AutoHotkey 熱鍵 #+z]
         ↓ Ctrl+C 抓進剪貼簿
-[clipboard: "rup wu0 wu0 fu4 5p cl3!"]
-        ↓ Python CLI (subprocess via bopo-fix.cmd)
-[layouts.py]   ← 大千鍵盤映射 (libchewing 對齊)
-[chewing_wrapper.py]  ← 反向查表 + 頻率排名 + OpenCC + 詞庫
-[punct.py]     ← 半形→全形標點
-        ↓ 寫回剪貼簿
-[clipboard: "今天天氣真好！"]
-        ↓ Ctrl+V
-[原地替換]
+[layouts.py] 大千鍵盤映射 (libchewing-aligned)
+[chewing_wrapper.py] 反向查表 + 頻率排名 + OpenCC + 詞庫
+[punct.py] 半形→全形標點
+        ↓ 寫回剪貼簿 + Ctrl+V
+[原地替換完成]
 ```
 
-兩層分離（AHK 只管 IO + 熱鍵；Python 管純轉換邏輯）→ Python 部分能用 pytest 完整覆蓋，AHK 那層極薄。
-
-## 測試
+### 測試
 
 ```powershell
 # 單元 + e2e tests (150 個)
 .venv\Scripts\python -m pytest tests\ --ignore=tests\fuzz_thesis.py -v
 
 # 任意語料庫的 fuzz 測試
-.venv\Scripts\python tests\fuzz_thesis.py --root C:\path\to\your-text-folder --samples 100
+.venv\Scripts\python tests\fuzz_thesis.py --root "C:\path\to\your-text-folder" --samples 100
 ```
 
-## 故障排除
+500 樣本 fuzz（5 種 random seed × 100 樣本）：**89-92% 準確度**。
 
-| 症狀 | 原因 | 解法 |
-|---|---|---|
-| `bopo-fix.cmd not found` 對話框 | AHK 找不到 CLI shim | 確認 `bopo-fix.cmd` 跟 `bopo-fix.ahk` 在同個目錄；或設環境變數 `BOPO_FIX_CMD` 指向 cmd 路徑 |
-| 第一次跑時印 `CC-CEDICT download failed` | 沒網路 / 防火牆擋 | 工具仍可用（~88% 準確度）；之後有網路時手動再跑一次 CLI 觸發下載 |
-| 按 Win+Shift+Z 沒反應 | AHK daemon 沒起來 | 雙擊 `bopo-fix.ahk` 確認托盤有綠 H 圖示 |
-| 替換後游標跑掉、選取消失 | AHK 模擬 Ctrl+V 後焦點變化 | 正常，重新點一下輸入框即可 |
-| 跨遠端桌面 / VM 失效 | 程式化 Ctrl+C/V 在 RDP 不可靠 | 改用 CLI：`bopo-fix.cmd "..."` 然後手動貼 |
+### 為什麼一個檔案叫 `thesis_phrase_overrides.py`
 
-## 已知限制
+歷史包袱 — 第一個用 case 是還原作者的論文亂碼。**任何領域的詞都能加進去**（醫學、法律、工程、行銷、ㄎㄧㄤ 文 ...），檔名只是名稱不影響功能。
 
-- 只支援大千 (Microsoft Bopomofo IME 預設) 鍵盤配置（v2 計畫加倚天/Hsu/IBM）
-- 同音字偶爾選錯（如 是/事、和/合）— 沒上下文模型解不掉
-- 變體字可能挑你不想要的（裏/裡、着/著）
-- `,` `.` 在句尾被當標點 vs 在 ㄝ/ㄡ 的角色 — 用前一字 context heuristic 處理，覆蓋 ~95% 場景
+</details>
 
-## 致謝
+---
+
+## Built on
 
 - [libchewing](https://github.com/chewing/libchewing) — 大千鍵盤配置 source of truth
 - [pypinyin](https://github.com/mozillazg/python-pinyin) — 漢字→注音字典基礎
