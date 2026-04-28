@@ -87,11 +87,14 @@ rm ~/.cache/bopo-fix/reverse_dicts.pkl
 如果你有大量繁體中文文本（論文 / 部落格 / 筆記），可以讓工具掃描自動產生詞表：
 
 ```bash
-# 編輯 tests/build_thesis_phrases.py 把 ROOT 改成你的文件目錄
-.venv\Scripts\python tests/build_thesis_phrases.py
+# 從你的文件目錄挖出常用 2-4 字詞
+.venv\Scripts\python tests/build_phrase_overrides.py --corpus ~/Documents/my-papers
+
+# 從你的文件目錄挖出單字偏好
+.venv\Scripts\python tests/build_char_overrides.py --corpus ~/Documents/my-papers
 ```
 
-會自動分析、提取常用 2-4 字詞、產生 `thesis_phrase_overrides.py`，下次按熱鍵就生效。
+兩個腳本會自動分析、改寫對應的 override 檔案。下次按熱鍵就生效（記得刪 `~/.cache/bopo-fix/reverse_dicts.pkl`）。
 
 ## 架構
 
@@ -114,8 +117,8 @@ rm ~/.cache/bopo-fix/reverse_dicts.pkl
 ## 測試
 
 ```bash
-.venv\Scripts\python -m pytest tests/ -v          # 150 個 unit + e2e tests
-.venv\Scripts\python tests/fuzz_thesis.py --samples 100   # 真實文本 fuzz
+.venv\Scripts\python -m pytest tests/ --ignore=tests/fuzz_thesis.py -v   # 150 個 unit + e2e tests
+.venv\Scripts\python tests/fuzz_thesis.py --root ~/your-text-folder --samples 100   # 真實文本 fuzz
 ```
 
 ## 已知限制

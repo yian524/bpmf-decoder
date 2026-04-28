@@ -347,10 +347,10 @@ def _reverse_dicts() -> tuple[dict[str, str], dict[str, str], dict[str, int]]:
         if len(txt) >= 2:
             phrase_dict[bp] = txt
 
-    # Thesis-mined phrases (auto-generated from user's 碩論 directory).
-    # These are 2-4 char phrases the user actually writes ≥30 times,
-    # so they reflect domain vocabulary (評估 / 特徵 / 資料集 / etc.)
-    # that generic frequency ranking would miss.
+    # User-supplied / corpus-mined phrases (from thesis_phrase_overrides.py).
+    # Ships with example entries; users can hand-edit or regenerate from
+    # their own corpus via tests/build_phrase_overrides.py to capture
+    # domain-specific vocabulary that generic frequency ranking misses.
     try:
         from thesis_phrase_overrides import THESIS_PHRASES
     except ImportError:

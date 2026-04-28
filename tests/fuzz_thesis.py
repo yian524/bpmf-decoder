@@ -1,17 +1,18 @@
-"""Fuzz test against real thesis vocabulary.
+"""Fuzz test against any Chinese-text corpus.
 
 Round-trip pipeline:
-   原始中文 → pypinyin Bopomofo → reverse-layout English keys
-            → bopo-fix CLI → 還原中文
-   compare(原始, 還原)
+   Chinese → pypinyin Bopomofo → reverse-layout English keys
+           → bopo-fix CLI → 還原中文
+   compare(original, recovered)
 
-Sources random Chinese snippets from the user's 碩論 directory. Lengths
-20-150 chars, Chinese-only (filtering punct/digits). Reports per-char
-accuracy and lists characters that consistently get mistranslated so we
-can target them in PREFERRED_CHAR or expand CC-CEDICT phrase coverage.
+Sources random Chinese snippets from a directory of .md/.txt files.
+Reports per-char accuracy and lists characters that consistently get
+mistranslated so you can target them in PREFERRED_CHAR or expand
+CC-CEDICT phrase coverage.
 
 Usage:
-    python tests/fuzz_thesis.py --samples 50 --min 20 --max 150
+    python tests/fuzz_thesis.py --root ~/my-text-folder --samples 100
+    python tests/fuzz_thesis.py --root /path/to/corpus --min 20 --max 150
 """
 from __future__ import annotations
 
@@ -137,7 +138,8 @@ def char_diff(original: str, recovered: str) -> list[tuple[int, str, str]]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--root", default=str(Path.home() / "Desktop" / "碩論"))
+    ap.add_argument("--root", required=True,
+                    help="Directory of .md/.txt files to sample from.")
     ap.add_argument("--samples", type=int, default=30)
     ap.add_argument("--min", type=int, default=20)
     ap.add_argument("--max", type=int, default=150)
