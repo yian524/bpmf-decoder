@@ -1,0 +1,29 @@
+# Python venv (each user creates their own)
+.venv/
+venv/
+
+# Python build artefacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# bopo-fix runtime cache (generated on first run)
+.cache/
+
+# backup / experimental
+*.bak
+*.orig
+.coverage
