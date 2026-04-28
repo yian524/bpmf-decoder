@@ -44,21 +44,8 @@ _S2T = OpenCC("s2twp")
 # pickle is ~30ms. The cache key invalidates on changes to:
 #   - this file's source (overrides, freq logic)
 #   - pypinyin version (dictionary contents)
-# Cache lives under ~/.cache/zhuyin-decoder/ (matching the repo name).
-# Falls back to the legacy ~/.cache/bopo-fix/ path if it exists, so users
-# upgrading from the pre-rename version don't lose their downloaded CEDICT.
-def _resolve_cache_dir() -> Path:
-    if "BOPO_FIX_CACHE_DIR" in os.environ:
-        return Path(os.environ["BOPO_FIX_CACHE_DIR"])
-    primary = Path.home() / ".cache" / "zhuyin-decoder"
-    legacy = Path.home() / ".cache" / "bopo-fix"
-    # Use legacy dir if it exists (preserves cached cedict + pickle)
-    if legacy.exists() and not primary.exists():
-        return legacy
-    return primary
-
-
-_CACHE_DIR = _resolve_cache_dir()
+_CACHE_DIR = Path(os.environ.get("BOPO_FIX_CACHE_DIR",
+                                  Path.home() / ".cache" / "bopo-fix"))
 _CACHE_FILE = _CACHE_DIR / "reverse_dicts.pkl"
 _CEDICT_FILE = _CACHE_DIR / "cedict_ts.u8"  # downloaded once, see install
 _CACHE_VERSION = 6  # bump when build logic changes incompatibly
@@ -81,7 +68,7 @@ def _download_cedict() -> bool:
 
     try:
         _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        print(f"[bopo-fix] downloading CC-CEDICT from mdbg.net "
+        print(f"[bpmf-decoder] downloading CC-CEDICT from mdbg.net "
               f"(~4MB, one-time) ...", flush=True)
         with urllib.request.urlopen(_CEDICT_URL, timeout=30) as resp:
             data = resp.read()
@@ -90,12 +77,12 @@ def _download_cedict() -> bool:
                 if name.endswith(".u8") or name.endswith("_mdbg.txt"):
                     with zf.open(name) as src, _CEDICT_FILE.open("wb") as dst:
                         dst.write(src.read())
-                    print(f"[bopo-fix] saved CC-CEDICT to {_CEDICT_FILE}",
+                    print(f"[bpmf-decoder] saved CC-CEDICT to {_CEDICT_FILE}",
                           flush=True)
                     return True
         return False
     except Exception as e:
-        print(f"[bopo-fix] CC-CEDICT download failed ({type(e).__name__}: {e})"
+        print(f"[bpmf-decoder] CC-CEDICT download failed ({type(e).__name__}: {e})"
               f" — engine will run with reduced phrase coverage. Re-run later"
               f" when network is available, or download manually from "
               f"{_CEDICT_URL}", flush=True)

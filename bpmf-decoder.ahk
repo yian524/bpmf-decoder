@@ -1,6 +1,6 @@
 #Requires AutoHotkey v2.0
 ;;
-;; bopo-fix.ahk — hotkey wrapper for the wrong-IME-layout undo tool.
+;; bpmf-decoder.ahk — hotkey wrapper for the wrong-IME-layout undo tool.
 ;;
 ;; Hotkey:   Win + Shift + Z
 ;; Action:   Selected English-keys garble → 繁體中文 in place.
@@ -18,41 +18,41 @@
 ;;   to deliver selection on Ctrl+C, short enough not to feel laggy
 ;;   when nothing is selected (we abort early in that case).
 
-; Resolve bopo-fix.cmd relative to this .ahk file's location. This script
-; should sit in the same directory as bopo-fix.cmd (the repo root).
+; Resolve bpmf-decoder.cmd relative to this .ahk file's location. This script
+; should sit in the same directory as bpmf-decoder.cmd (the repo root).
 ;
-; If you place bopo-fix.cmd elsewhere (e.g., a PATH directory), set the
-; BOPO_FIX_CMD environment variable to its full path.
-CMD := EnvGet("BOPO_FIX_CMD")
+; If you place bpmf-decoder.cmd elsewhere (e.g., a PATH directory), set the
+; BPMF_DECODER_CMD environment variable to its full path.
+CMD := EnvGet("BPMF_DECODER_CMD")
 if (CMD == "") {
-    CMD := A_ScriptDir . "\bopo-fix.cmd"
+    CMD := A_ScriptDir . "\bpmf-decoder.cmd"
 }
 if !FileExist(CMD) {
-    MsgBox "bopo-fix.cmd not found at: " . CMD
-        . "`n`nFix: place bopo-fix.cmd next to bopo-fix.ahk (same folder),"
-        . " OR set the BOPO_FIX_CMD environment variable to its full path.",
-        "bopo-fix install error", 0x10
+    MsgBox "bpmf-decoder.cmd not found at: " . CMD
+        . "`n`nFix: place bpmf-decoder.cmd next to bpmf-decoder.ahk (same folder),"
+        . " OR set the BPMF_DECODER_CMD environment variable to its full path.",
+        "bpmf-decoder install error", 0x10
     ExitApp 1
 }
 
 #+z::  ; Win + Shift + Z
 {
-    static TmpIn := A_Temp . "\bopo-fix-in.txt"
-    static TmpOut := A_Temp . "\bopo-fix-out.txt"
+    static TmpIn := A_Temp . "\bpmf-decoder-in.txt"
+    static TmpOut := A_Temp . "\bpmf-decoder-out.txt"
 
     ; Save current clipboard (binary blob — preserves images / files / formats).
     saved := ClipboardAll()
     A_Clipboard := ""
     Send "^c"
     if !ClipWait(0.3) {
-        TrayTip "bopo-fix", "請先選取要還原的英文亂碼", 0x10
+        TrayTip "bpmf-decoder", "請先選取要還原的英文亂碼", 0x10
         A_Clipboard := saved
         return
     }
 
     garbled := A_Clipboard
     if (Trim(garbled) = "") {
-        TrayTip "bopo-fix", "選取為空白", 0x10
+        TrayTip "bpmf-decoder", "選取為空白", 0x10
         A_Clipboard := saved
         return
     }
@@ -84,7 +84,7 @@ if !FileExist(CMD) {
     try FileDelete TmpOut
 
     if (chinese = "") {
-        TrayTip "bopo-fix", "轉換失敗（空輸出）", 0x10
+        TrayTip "bpmf-decoder", "轉換失敗（空輸出）", 0x10
         A_Clipboard := saved
         return
     }
@@ -92,7 +92,7 @@ if !FileExist(CMD) {
     ; Replace selection with the recovered Chinese.
     A_Clipboard := chinese
     if !ClipWait(0.5) {
-        TrayTip "bopo-fix", "剪貼簿寫入失敗", 0x10
+        TrayTip "bpmf-decoder", "剪貼簿寫入失敗", 0x10
         A_Clipboard := saved
         return
     }
@@ -108,14 +108,14 @@ if !FileExist(CMD) {
 ;; without needing to find a window with selectable garbled text.
 ;;
 A_TrayMenu.Add()
-A_TrayMenu.Add("bopo-fix: Self-test", BopoFixSelfTest)
+A_TrayMenu.Add("bpmf-decoder: Self-test", BopoFixSelfTest)
 
 BopoFixSelfTest(*)
 {
     sample := "rup wu0 wu0 fu4 5p cl3!"
     expected := "今天天氣真好！"
-    static TmpIn := A_Temp . "\bopo-fix-selftest-in.txt"
-    static TmpOut := A_Temp . "\bopo-fix-selftest-out.txt"
+    static TmpIn := A_Temp . "\bpmf-decoder-selftest-in.txt"
+    static TmpOut := A_Temp . "\bpmf-decoder-selftest-out.txt"
 
     try FileDelete TmpIn
     try FileDelete TmpOut
@@ -133,11 +133,11 @@ BopoFixSelfTest(*)
     try FileDelete TmpOut
 
     if (actual = expected) {
-        TrayTip "bopo-fix self-test: OK", "Input:`n  " . sample . "`nOutput:`n  " . actual, 0x40
+        TrayTip "bpmf-decoder self-test: OK", "Input:`n  " . sample . "`nOutput:`n  " . actual, 0x40
     } else {
-        TrayTip "bopo-fix self-test: FAIL",
+        TrayTip "bpmf-decoder self-test: FAIL",
             "Expected:`n  " . expected . "`nGot:`n  " . actual, 0x10
     }
 }
 
-TrayTip "bopo-fix loaded", "熱鍵: Win+Shift+Z 將選取的英文亂碼還原為繁體中文", 0x40
+TrayTip "bpmf-decoder loaded", "熱鍵: Win+Shift+Z 將選取的英文亂碼還原為繁體中文", 0x40
